@@ -83,7 +83,7 @@ class OneLogin_Saml2_Settings(object):
         """
         self.__sp_validation_only = sp_validation_only
         self.__paths = {}
-        self.__strict = True
+        self.__strict = False
         self.__debug = False
         self.__sp = {}
         self.__idp = {}
@@ -214,7 +214,7 @@ class OneLogin_Saml2_Settings(object):
             self.__errors = []
             self.__sp = settings['sp']
             self.__idp = settings.get('idp', {})
-            self.__strict = settings.get('strict', True)
+            self.__strict = settings.get('strict', False)
             self.__debug = settings.get('debug', False)
             self.__security = settings.get('security', {})
             self.__contacts = settings.get('contactPerson', {})
@@ -372,18 +372,18 @@ class OneLogin_Saml2_Settings(object):
                     exists_fingerprint = bool(idp.get('certFingerprint'))
 
                     exists_multix509sign = 'x509certMulti' in idp and \
-                        'signing' in idp['x509certMulti'] and \
-                        idp['x509certMulti']['signing']
+                                           'signing' in idp['x509certMulti'] and \
+                                           idp['x509certMulti']['signing']
                     exists_multix509enc = 'x509certMulti' in idp and \
-                        'encryption' in idp['x509certMulti'] and \
-                        idp['x509certMulti']['encryption']
+                                          'encryption' in idp['x509certMulti'] and \
+                                          idp['x509certMulti']['encryption']
 
                     want_assert_sign = bool(security.get('wantAssertionsSigned'))
                     want_mes_signed = bool(security.get('wantMessagesSigned'))
                     nameid_enc = bool(security.get('nameIdEncrypted'))
 
                     if (want_assert_sign or want_mes_signed) and \
-                            not(exists_x509 or exists_fingerprint or exists_multix509sign):
+                            not (exists_x509 or exists_fingerprint or exists_multix509sign):
                         errors.append('idp_cert_or_fingerprint_not_found_and_required')
                     if nameid_enc and not (exists_x509 or exists_multix509enc):
                         errors.append('idp_cert_not_found_and_required')
@@ -439,11 +439,14 @@ class OneLogin_Saml2_Settings(object):
                             if 'name' in req_attrib and not req_attrib['name'].strip():
                                 errors.append('sp_attributeConsumingService_requestedAttributes_name_invalid')
                             if 'attributeValue' in req_attrib and type(req_attrib['attributeValue']) != list:
-                                errors.append('sp_attributeConsumingService_requestedAttributes_attributeValue_type_invalid')
+                                errors.append(
+                                    'sp_attributeConsumingService_requestedAttributes_attributeValue_type_invalid')
                             if 'isRequired' in req_attrib and type(req_attrib['isRequired']) != bool:
-                                errors.append('sp_attributeConsumingService_requestedAttributes_isRequired_type_invalid')
+                                errors.append(
+                                    'sp_attributeConsumingService_requestedAttributes_isRequired_type_invalid')
 
-                    if "serviceDescription" in attributeConsumingService and not isinstance(attributeConsumingService['serviceDescription'], basestring):
+                    if "serviceDescription" in attributeConsumingService and not isinstance(
+                            attributeConsumingService['serviceDescription'], basestring):
                         errors.append('sp_attributeConsumingService_serviceDescription_type_invalid')
 
                 slo_url = sp.get('singleLogoutService', {}).get('url')
@@ -463,7 +466,7 @@ class OneLogin_Saml2_Settings(object):
 
                 if not self.check_sp_certs():
                     if authn_sign or logout_req_sign or logout_res_sign or \
-                       want_assert_enc or want_nameid_enc:
+                            want_assert_enc or want_nameid_enc:
                         errors.append('sp_cert_not_found_and_required')
 
             if 'contactPerson' in settings:
@@ -485,7 +488,7 @@ class OneLogin_Saml2_Settings(object):
                 for org in settings['organization']:
                     organization = settings['organization'][org]
                     if ('name' not in organization or len(organization['name']) == 0) or \
-                        ('displayname' not in organization or len(organization['displayname']) == 0) or \
+                            ('displayname' not in organization or len(organization['displayname']) == 0) or \
                             ('url' not in organization or len(organization['url']) == 0):
                         errors.append('organization_not_enought_data')
                         break
@@ -678,7 +681,8 @@ class OneLogin_Saml2_Settings(object):
             signature_algorithm = self.__security['signatureAlgorithm']
             digest_algorithm = self.__security['digestAlgorithm']
 
-            metadata = OneLogin_Saml2_Metadata.sign_metadata(metadata, key_metadata, cert_metadata, signature_algorithm, digest_algorithm)
+            metadata = OneLogin_Saml2_Metadata.sign_metadata(metadata, key_metadata, cert_metadata, signature_algorithm,
+                                                             digest_algorithm)
 
         return metadata
 
@@ -734,11 +738,13 @@ class OneLogin_Saml2_Settings(object):
         if 'x509certMulti' in self.__idp:
             if 'signing' in self.__idp['x509certMulti']:
                 for idx in range(len(self.__idp['x509certMulti']['signing'])):
-                    self.__idp['x509certMulti']['signing'][idx] = OneLogin_Saml2_Utils.format_cert(self.__idp['x509certMulti']['signing'][idx])
+                    self.__idp['x509certMulti']['signing'][idx] = OneLogin_Saml2_Utils.format_cert(
+                        self.__idp['x509certMulti']['signing'][idx])
 
             if 'encryption' in self.__idp['x509certMulti']:
                 for idx in range(len(self.__idp['x509certMulti']['encryption'])):
-                    self.__idp['x509certMulti']['encryption'][idx] = OneLogin_Saml2_Utils.format_cert(self.__idp['x509certMulti']['encryption'][idx])
+                    self.__idp['x509certMulti']['encryption'][idx] = OneLogin_Saml2_Utils.format_cert(
+                        self.__idp['x509certMulti']['encryption'][idx])
 
     def format_sp_cert(self):
         """

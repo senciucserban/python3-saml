@@ -622,6 +622,22 @@ class OneLogin_Saml2_Utils(object):
             return OneLogin_Saml2_XML.extract_tag_text(root, "saml:NameID")
 
     @staticmethod
+    def get_issuer(dom):
+        issuer = {}
+        issuer_entry = OneLogin_Saml2_XML.query(dom, '/samlp:Response/saml:Issuer')
+        if len(issuer_entry) != 1:
+            raise OneLogin_Saml2_ValidationError(
+                'Missing Issuer on response', OneLogin_Saml2_ValidationError.MISSING_ISSUER
+            )
+        if not issuer_entry[0].text:
+            raise OneLogin_Saml2_ValidationError(
+                'Missing Issuer on response', OneLogin_Saml2_ValidationError.MISSING_ISSUER
+            )
+
+        issuer['Format'] = issuer_entry[0].get('Format', None)
+        return issuer
+
+    @staticmethod
     def get_status(dom):
         """
         Gets Status from a Response.
@@ -648,6 +664,13 @@ class OneLogin_Saml2_Utils(object):
                 OneLogin_Saml2_ValidationError.MISSING_STATUS_CODE
             )
         code = code_entry[0].values()[0]
+
+        if not code:
+            raise OneLogin_Saml2_ValidationError(
+                'Missing Status Code on response',
+                OneLogin_Saml2_ValidationError.MISSING_STATUS_CODE
+            )
+
         status['code'] = code
 
         status['msg'] = ''

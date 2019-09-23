@@ -88,10 +88,13 @@ class OneLogin_Saml2_Auth(object):
         assert isinstance(value, bool)
         self.__settings.set_strict(value)
 
-    def process_response(self, request_id=None):
+    def process_response(self, request_id=None, request_issue_instant=None):
         """
         Process the SAML Response sent by the IdP.
 
+        :param request_issue_instant: Is an optional argument. Is Issue instant Date
+        of the AuthNRequest sent by this SP to the IdP.
+        :type: request_issue_instant: string
         :param request_id: Is an optional argument. Is the ID of the AuthNRequest sent by this SP to the IdP.
         :type request_id: string
 
@@ -105,7 +108,8 @@ class OneLogin_Saml2_Auth(object):
             response = OneLogin_Saml2_Response(self.__settings, self.__request_data['post_data']['SAMLResponse'])
             self.__last_response = response.get_xml_document()
 
-            if response.is_valid(self.__request_data, request_id):
+            if response.is_valid(self.__request_data, request_id=request_id,
+                                 request_issue_instant=request_issue_instant):
                 self.__attributes = response.get_attributes()
                 self.__nameid = response.get_nameid()
                 self.__nameid_format = response.get_nameid_format()
@@ -349,7 +353,8 @@ class OneLogin_Saml2_Auth(object):
         """
         return self.__last_authn_contexts
 
-    def login(self, return_to=None, force_authn=False, is_passive=False, set_nameid_policy=True, name_id_value_req=None):
+    def login(self, return_to=None, force_authn=False, is_passive=False, set_nameid_policy=True,
+              name_id_value_req=None):
         """
         Initiates the SSO process.
 
@@ -371,7 +376,8 @@ class OneLogin_Saml2_Auth(object):
         :returns: Redirection URL
         :rtype: string
         """
-        authn_request = OneLogin_Saml2_Authn_Request(self.__settings, force_authn, is_passive, set_nameid_policy, name_id_value_req)
+        authn_request = OneLogin_Saml2_Authn_Request(self.__settings, force_authn, is_passive, set_nameid_policy,
+                                                     name_id_value_req)
         self.__last_request = authn_request.get_xml()
         self.__last_request_id = authn_request.get_id()
 
@@ -552,7 +558,8 @@ class OneLogin_Saml2_Auth(object):
         }
         sign_algorithm_transform = sign_algorithm_transform_map.get(sign_algorithm, xmlsec.Transform.RSA_SHA1)
 
-        signature = OneLogin_Saml2_Utils.sign_binary(msg, key, sign_algorithm_transform, self.__settings.is_debug_active())
+        signature = OneLogin_Saml2_Utils.sign_binary(msg, key, sign_algorithm_transform,
+                                                     self.__settings.is_debug_active())
         data['Signature'] = OneLogin_Saml2_Utils.b64encode(signature)
         data['SigAlg'] = sign_algorithm
 
@@ -608,8 +615,8 @@ class OneLogin_Saml2_Auth(object):
 
             exists_x509cert = 'x509cert' in idp_data and idp_data['x509cert']
             exists_multix509sign = 'x509certMulti' in idp_data and \
-                'signing' in idp_data['x509certMulti'] and \
-                idp_data['x509certMulti']['signing']
+                                   'signing' in idp_data['x509certMulti'] and \
+                                   idp_data['x509certMulti']['signing']
 
             if not (exists_x509cert or exists_multix509sign):
                 error_msg = 'In order to validate the sign on the %s, the x509cert of the IdP is required' % saml_type

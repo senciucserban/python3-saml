@@ -24,12 +24,12 @@ class OneLogin_Saml2_Templates(object):
   xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
   xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
   ID="%(id)s"
-  Version="2.0"%(provider_name)s%(force_authn_str)s%(is_passive_str)s
+  Version="2.0"%(force_authn_str)s%(is_passive_str)s
   IssueInstant="%(issue_instant)s"
   Destination="%(destination)s"
   ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
   AssertionConsumerServiceURL="%(assertion_url)s"%(attr_consuming_service_str)s>
-    <saml:Issuer>%(entity_id)s</saml:Issuer>%(subject_str)s%(nameid_policy_str)s
+    <saml:Issuer %(attr_issuer_str)s>%(entity_id)s</saml:Issuer>%(nameid_policy_str)s
 %(requested_authn_context_str)s
 </samlp:AuthnRequest>"""
 
@@ -75,7 +75,7 @@ class OneLogin_Saml2_Templates(object):
             <md:RequestedAttribute Name="%(req_attr_name)s"%(req_attr_nameformat_str)s%(req_attr_isrequired_str)s%(req_attr_aux_str)s"""
 
     MD_ATTR_CONSUMER_SERVICE = """\
-        <md:AttributeConsumingService index="1">
+        <md:AttributeConsumingService index="0" isDefault="true">
             <md:ServiceName xml:lang="en">%(service_name)s</md:ServiceName>
 %(attr_cs_desc)s%(requested_attribute_str)s
         </md:AttributeConsumingService>\n"""
@@ -90,7 +90,8 @@ class OneLogin_Saml2_Templates(object):
 %(sls)s        <md:NameIDFormat>%(name_id_format)s</md:NameIDFormat>
         <md:AssertionConsumerService Binding="%(binding)s"
                                      Location="%(location)s"
-                                     index="1" />
+                                     index="0" 
+                                     isDefault="true"/>
 %(attribute_consuming_service)s    </md:SPSSODescriptor>
 %(organization)s
 %(contacts)s
