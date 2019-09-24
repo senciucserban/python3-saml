@@ -53,19 +53,6 @@ class OneLogin_Saml2_Authn_Request(object):
 
         destination = idp_data['singleSignOnService']['url']
 
-        provider_name_str = ''
-        organization_data = settings.get_organization()
-        if isinstance(organization_data, dict) and organization_data:
-            langs = organization_data
-            if 'en-US' in langs:
-                lang = 'en-US'
-            else:
-                lang = sorted(langs)[0]
-
-            display_name = 'displayname' in organization_data[lang] and organization_data[lang]['displayname']
-            if display_name:
-                provider_name_str = "\n" + '    ProviderName="%s"' % organization_data[lang]['displayname']
-
         force_authn_str = ''
         if force_authn is True:
             force_authn_str = "\n" + '    ForceAuthn="true"'
@@ -90,8 +77,7 @@ class OneLogin_Saml2_Authn_Request(object):
 
             nameid_policy_str = """
     <samlp:NameIDPolicy
-        Format="%s"
-        AllowCreate="true" />""" % name_id_policy_format
+        Format="%s"/>""" % name_id_policy_format
 
         requested_authn_context_str = ''
         if security['requestedAuthnContext'] is not False:
@@ -111,18 +97,25 @@ class OneLogin_Saml2_Authn_Request(object):
 
         attr_consuming_service_str = ''
         if 'attributeConsumingService' in sp_data and sp_data['attributeConsumingService']:
-            attr_consuming_service_str = "\n    AttributeConsumingServiceIndex=\"1\""
+            attr_consuming_service_str = "\n    AttributeConsumingServiceIndex=\"0\""
+
+        attr_issuer_str = ''
+        if 'Format' in sp_data.get('Issuer', dict()) and sp_data.get('Issuer', dict()).get('Format'):
+            attr_issuer_str += " Format=\"%s\"" % sp_data['Issuer']['Format']
+
+        if 'NameQualifier' in sp_data.get('Issuer', dict()) and sp_data.get('Issuer', dict()).get('NameQualifier'):
+            attr_issuer_str += " NameQualifier=\"%s\"" % sp_data['Issuer']['NameQualifier']
 
         request = OneLogin_Saml2_Templates.AUTHN_REQUEST % \
             {
                 'id': uid,
-                'provider_name': provider_name_str,
                 'force_authn_str': force_authn_str,
                 'is_passive_str': is_passive_str,
                 'issue_instant': issue_instant,
                 'destination': destination,
                 'assertion_url': sp_data['assertionConsumerService']['url'],
                 'entity_id': sp_data['entityId'],
+                'attr_issuer_str': attr_issuer_str,
                 'subject_str': subject_str,
                 'nameid_policy_str': nameid_policy_str,
                 'requested_authn_context_str': requested_authn_context_str,
