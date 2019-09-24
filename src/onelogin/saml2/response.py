@@ -1076,17 +1076,20 @@ class OneLogin_Saml2_Response(object):
         return self.__query_assertion('')[0].get('ID', None)
 
     def validate_issue_instant_dates(self, request_issue_instant):
+        """Verifies if the Response Issue Instant date is after the request one
+        and checks if the Assertion Issue Instant dates are equal between request and response"""
+
         if self.get_issue_instant_response() < request_issue_instant:
             raise OneLogin_Saml2_ValidationError(
                 'The IssueInstant attribute is previous to the IssueInstant attribute of the request',
-                OneLogin_Saml2_ValidationError.WRONG_ISSUE_INSTANT
+                OneLogin_Saml2_ValidationError.WRONG_ISSUER_FORMAT
             )
 
         assertion_issue_instant = self.__query_assertion('')[0].get('IssueInstant', None)
         if not assertion_issue_instant:
             raise OneLogin_Saml2_ValidationError(
                 'The IssueInstant attribute is previous to the IssueInstant attribute of the request',
-                OneLogin_Saml2_ValidationError.WRONG_ISSUE_INSTANT
+                OneLogin_Saml2_ValidationError.WRONG_ISSUER_FORMAT
             )
 
         if assertion_issue_instant < self.get_issue_instant_response():
