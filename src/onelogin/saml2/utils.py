@@ -627,7 +627,11 @@ class OneLogin_Saml2_Utils(object):
         issuer_entry = OneLogin_Saml2_XML.query(dom, '/samlp:Response/saml:Issuer')
         if len(issuer_entry) != 1:
             raise OneLogin_Saml2_ValidationError(
-                'Missing Issuer on response', OneLogin_Saml2_ValidationError.MISSING_STATUS
+                'Missing Issuer on response', OneLogin_Saml2_ValidationError.MISSING_ISSUER
+            )
+        if not issuer_entry[0].text:
+            raise OneLogin_Saml2_ValidationError(
+                'Missing Issuer on response', OneLogin_Saml2_ValidationError.MISSING_ISSUER
             )
 
         issuer['Format'] = issuer_entry[0].get('Format', None)

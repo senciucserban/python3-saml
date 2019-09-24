@@ -176,12 +176,15 @@ class OneLogin_Saml2_Response(object):
                         OneLogin_Saml2_ValidationError.WRONG_ASSERTION_VERSION
                     )
 
-                # Check that isssuer for assertion is valid
+                # Check that issuer for assertion is valid
                 if not self.check_assertion_issuer():
                     raise OneLogin_Saml2_ValidationError(
                         'The Assertion issuer missing',
                         OneLogin_Saml2_ValidationError.WRONG_ISSUER
                     )
+
+                # Check issuer format
+                self.check_assertion_issuer_format()
 
                 # Validates Assertion timestamps
                 self.validate_timestamps(raise_exceptions=True)
@@ -302,6 +305,8 @@ class OneLogin_Saml2_Response(object):
                                 OneLogin_Saml2_ValidationError.WRONG_INRESPONSETO
                             )
                         if in_response_to and irt != in_response_to:
+                            continue
+                        if in_response_to and irt and irt != in_response_to:
                             continue
                         recipient = sc_data.get('Recipient', None)
                         if recipient and current_url not in recipient:
@@ -427,7 +432,7 @@ class OneLogin_Saml2_Response(object):
 
     def check_issuer(self):
         """
-        Check issuer element exsists and format match with the one from settings
+        Check issuer element exists and format match with the one from settings
 
         :return:  Exception. If the Issuer is missing or empty
         """
@@ -463,10 +468,21 @@ class OneLogin_Saml2_Response(object):
 
     def check_assertion_issuer(self):
         issuer_node = self.__query_assertion('/saml:Issuer')
-        if len(issuer_node) == 1 and issuer_node[0].text:
-            return True
-        else:
+        return True if len(issuer_node) == 1 and issuer_node[0].text else False
+
+    def check_assertion_issuer_format(self):
+        issuer_node = self.__query_assertion('/saml:Issuer')
+        if len(issuer_node) != 1:
             return False
+
+        fmt = issuer_node[0].get('Format', None)
+        issuer_format = self.__settings.get_sp_data().get('Issuer', {}).get('Format', None)
+
+        if not fmt or fmt != self.__settings.get_sp_data().get('Issuer', {}).get('Format', None):
+            raise OneLogin_Saml2_ValidationError(
+                f'Wrong assertion issuer format expected: {issuer_format}, found: {fmt}',
+                OneLogin_Saml2_ValidationError.WRONG_ISSUER_FORMAT
+            )
 
     def check_one_authnstatement(self):
         """
